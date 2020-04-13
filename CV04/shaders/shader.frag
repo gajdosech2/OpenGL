@@ -19,6 +19,6 @@ void main()
     // Compute the dot product between normal and lightDir 
     float NdotL = max(dot(normalize(VertexIn.normal), normalize(lightDir)), 0.0);
     
-    // Setting Each Pixel To Red
+    // Setting color of each pixel
     colorOut = diffuse_col * NdotL;
 }

@@ -14,14 +14,14 @@ void setVertexArray() {
 
 	// Data for a set of triangles
 	float points[] = {
-	-0.5f, -0.5f,  0.0f,
-	0.5f, 0.0f,  0.0f,
-	0.0f, 0.5f,  0.0f};
+	-0.5f, -0.5f,  0.5f,
+	0.0f, -0.5f,  -0.5f,
+	0.5f, -0.5f,  0.5f};
 
 	float normals[] = {
-	0.0f, 0.0f,  1.0f,
-	0.0f, 0.0f,  1.0f,
-	0.0f, 0.0f,  1.0f};
+	0.0f, -1.0f,  0.0f,
+	0.0f, -1.0f,  0.0f,
+	0.0f, -1.0f,  0.0f};
 
 	// vertex buffer objects 
 	GLuint points_vbo = 0;
@@ -50,11 +50,8 @@ void renderScene(void) {
 
 	glUseProgram(p);
 
-	//glEnable(GL_DEPTH_TEST); //treba zapnut z-buffer
-
 	int loc = glGetUniformLocation(p, "angle"); //set rotation angle
 	glUniform1f(loc, angle);
-
 
 	glBindVertexArray (vao);
 	// draw points 0-3 from the currently bound VAO with current in-use shader
@@ -71,7 +68,7 @@ int main(int argc, char **argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowPosition(100,100);
-	glutInitWindowSize(320,320);
+	glutInitWindowSize(640,640);
 	glutCreateWindow("OpenGL");
 
 	// init GLEW to support extensions
@@ -130,6 +127,8 @@ int main(int argc, char **argv) {
 	// register callbacks
 	glutDisplayFunc(renderScene);
 	glutIdleFunc(renderScene);
+
+	glEnable(GL_DEPTH_TEST);
 
 	// enter GLUT event processing cycle
 	glutMainLoop();

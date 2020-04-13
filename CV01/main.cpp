@@ -90,7 +90,6 @@ void setTexture() {
 
 void renderScene(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glUseProgram(0);
 
 	glRotatef(0.1, 1.0, 0, 0); 
 	glRotatef(0.2, 0, 1.0, 0);
@@ -174,17 +173,18 @@ void renderScene(void) {
 		glTexCoord2f(0.0, 1.0);
 		glVertex3f(-1.0, -1.0, 1.0);
 	glEnd();
+
 	glutSwapBuffers();
 }
 
 void reshape(int w, int h) { 
-   glViewport (0, 0, (GLsizei) w, (GLsizei) h); 
-   glMatrixMode (GL_PROJECTION);
-   glLoadIdentity ();
-   gluPerspective(40.0, (GLfloat) w/(GLfloat) h, 0.1, 100.0); 
-   glMatrixMode (GL_MODELVIEW);
-   glLoadIdentity ();
-   glTranslatef (0.0, 0.0, -10.0);
+	glViewport(0, 0, (GLsizei)w, (GLsizei)h);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(40.0, (GLfloat)w / (GLfloat)h, 0.1, 100.0);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0.0, 0.0, -10.0);
 }
 
 GLfloat light_diffuse[] = {1.0, 0.0, 0.0, 1.0};

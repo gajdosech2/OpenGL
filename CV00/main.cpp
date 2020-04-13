@@ -67,28 +67,28 @@ void setShaders() {
 	printProgramInfoLog(p);
 }
 
-void renderScene(void) {
+void renderScene() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glUseProgram(p);
 
 	glBegin(GL_TRIANGLES);
-		glNormal3f(0.0, -1.0, -1.0);
+		glNormal3f(0.0, -1.0, 1.0);
 		glVertex3f(-0.5, -0.5, 0.0);
 
 		glNormal3f(1.0, 0.0, -1.0);
 		glVertex3f(0.5, 0.0, 0.0);
 
-		glNormal3f(0.0, 1.0, -1.0);
+		glNormal3f(0.0, 1.0, 1.0);
 		glVertex3f(0.0, 0.5, 0.0);
 
-		glNormal3f(0, -1.0, -1.0);
+		glNormal3f(0, -1.0, 1.0);
 		glVertex3f(-0.5, -0.5, 0.0);
 
 		glNormal3f(1.0, 0.0, -1.0);
 		glVertex3f(0.5, 0.0, 0.0);
 
-		glNormal3f(1.0, -1.0, -0.75);
+		glNormal3f(1.0, -1.0, 0.75);
 		glVertex3f(0.5, -0.5, 0.0);
 	glEnd();
 
@@ -98,21 +98,21 @@ void renderScene(void) {
 int main(int argc, char **argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
-	glutInitWindowPosition(100, 100);
+	glutInitWindowPosition(200, 100);
 	glutInitWindowSize(320, 320);
 	glutCreateWindow("OpenGL");
 
 	glewInit();
 	if (!glewIsSupported("GL_VERSION_2_0")) {
 		printf("OpenGL 2.0 not supported\n");
-		exit(1);
+		return 1;
 	}
 
 	setShaders();
 
 	glUseProgram(p);
 	GLuint L = glGetUniformLocation(p, "L");
-	glUniform3f(L, 0.0, 0.5, -1.0);
+	glUniform3f(L, 0.0, 0.5, 1.0);
 
 	glutDisplayFunc(renderScene);
 	glutMainLoop();
