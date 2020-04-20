@@ -91,7 +91,6 @@ int main(int argc, char **argv) {
 	//This is the location of the L_pos uniform variable in our program
 	loc = glGetUniformLocation(p, "diffuse_col");
 	glUniform4f(loc, 1.0, 1.0, 0.0, 1.0);
-
 	
 	float c = cos(0.1*PI/180.0);
 	float s = sin(0.1*PI/180.0);
