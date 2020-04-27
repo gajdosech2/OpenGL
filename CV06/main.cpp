@@ -14,7 +14,6 @@
 #include "Assimp/aiPostProcess.h"
 #include "Assimp/aiScene.h"
 
-
 GLuint p;
 GLuint vao;
 GLuint fb, depth_tex; 
@@ -91,7 +90,7 @@ void loadScene(std::string name)
 	}
 }
 
-void setFBO(int texture_width,int texture_height)
+void setFBO(int texture_width, int texture_height)
 {
 	glGenTextures(1, &depth_tex);
 	glBindTexture(GL_TEXTURE_2D, depth_tex);
@@ -99,23 +98,23 @@ void setFBO(int texture_width,int texture_height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	//glTexImage2D (...);
 
-	glGenFramebuffersEXT(1, &fb);
-	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fb);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, texture_width, texture_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+
+	glGenFramebuffers(1, &fb);
+	glBindFramebuffer(GL_FRAMEBUFFER, fb);
   
 	//Attach depth_tex
-	//glFramebufferTexture(...);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depth_tex, 0);
 
 	GLenum status;
-	status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if( status != GL_FRAMEBUFFER_COMPLETE )
 		printf("GL_FRAMEBUFFER_COMPLETE failed, CANNOT use FBO\n");
 
 	glDrawBuffer(GL_NONE); // No color buffer is drawn to.
  
-	// switch back to window-system-provided framebuffer
-	// and unbind the texture
+	// switch back to window-system-provided framebuffer and unbind the texture
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -134,7 +133,7 @@ void setVertexArray()
 
 void renderScene(void) 
 {
-	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fb);
+	glBindFramebuffer(GL_FRAMEBUFFER, fb);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	glUseProgram(p);
@@ -146,7 +145,7 @@ void renderScene(void)
 	glDrawElements(GL_TRIANGLES, faceCnt* 3, GL_UNSIGNED_INT, NULL);
 
 	
-	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glBindTexture(GL_TEXTURE_2D, depth_tex);
@@ -165,8 +164,8 @@ int main(int argc, char **argv)
 	// init GLUT and create Window
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
-	glutInitWindowPosition(100,100);
-	glutInitWindowSize(512,512);
+	glutInitWindowPosition(100, 100);
+	glutInitWindowSize(512, 512);
 	glutCreateWindow("OpenGL");
 
 	// init GLEW to support extensions
@@ -179,13 +178,13 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-	p = createShaderProgram((char *)"./shaders/shader.vert", (char*)"./shaders/shader.geom", (char*)"./shaders/shader.frag");
+	p = createShaderProgram1((char *)"./shaders/shader.vert", (char*)"./shaders/shader.frag");
 	glUseProgram(p);
 	loadScene("chobotnicka2.dae");
 
 	//This is the location of the L_pos uniform variable in our program
 	int loc = glGetUniformLocation(p, "L_pos");
-	glUniform3f(loc, 0.0, 0.0, 10.0);
+	glUniform3f(loc, 0.0, 1.0, 0.0);
 
 	//This is the location of the L_pos uniform variable in our program
 	loc = glGetUniformLocation(p, "diffuse_col");
@@ -193,10 +192,10 @@ int main(int argc, char **argv)
 
 	// set matrix with an array
 	Matrix4x4 model_view;
-
-	//ToDo nastavte vhodny pohlad z kamery
-	//model_view.Translate(...);
-	//model_view....
+	model_view.Translate(0, 0, -2);
+	model_view.Scale(0.1, 0.1, 0.1);
+	model_view.Rotate(160, 0, 0, 1);
+	model_view.Rotate(-70, 1, 0, -0.5);
 
 	float * normal_matrix = new float[9];
 	for (int i = 0; i < 3; i++)
@@ -209,29 +208,28 @@ int main(int argc, char **argv)
 	Matrix4x4 light_modelview;
 	light_modelview.Translate(0, 0, -2);
 	light_modelview.Scale(0.1, 0.1, 0.1);
-	light_modelview.Rotate(20, 0, 1, 0);
+	//light_modelview.Rotate(90, 0, 1, 0);
 
 	Matrix4x4 light_projection;
 
-	//ToDo nastavte kameru z pozicie svetla
-	//light_projection.setOrtho(...);
+	light_projection.setOrtho(-1.0f, 1.0f, 1.0f, -1.0f, 0.1f, 100.0f);
+	//light_projection.setPerspective(10, 1.0f, 0.1f, 100.0f);
 
-	//ToDo nastavte uniformy
 	//This is the location of the camera view matrix uniform variable in our program
 	loc = glGetUniformLocation(p, "camera_model_view_matrix");
-	//glUniformMatrix4fv(...);
+	glUniformMatrix4fv(loc, 1, GL_FALSE, model_view.matrix);
 
 	//This is the location of the normal matrix uniform variable in our program
 	loc = glGetUniformLocation(p, "normal_matrix");
-	//glUniformMatrix3fv(...);
+	glUniformMatrix3fv(loc, 1, GL_FALSE, normal_matrix);
 
 	//This is the location of the camera projection matrix uniform variable in our program
 	loc = glGetUniformLocation(p, "camera_projection_matrix");
-	//glUniformMatrix4fv(...);
+	glUniformMatrix4fv(loc, 1, GL_FALSE, projection.matrix);
 
 	//This is the location of the view from the light position matrix uniform variable in our program
 	loc = glGetUniformLocation(p, "light_model_view_matrix");
-	//glUniformMatrix4fv(...);
+	glUniformMatrix4fv(loc, 1, GL_FALSE, light_modelview.matrix);
 
 	//This is the location of the view from the light projection uniform variable in our program
 	loc = glGetUniformLocation(p, "light_projection_matrix");

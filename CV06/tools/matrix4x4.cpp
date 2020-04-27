@@ -99,7 +99,10 @@ void Matrix4x4::setOrtho(float left, float right, float top, float bottom, float
 
 	//http://www.songho.ca/opengl/gl_projectionmatrix.html
 
-	//matrix[0] = ..., matrix[1] = ..., ...
+	matrix[0] = 2.0/(right-left);	matrix[1] = 0.0;	matrix[2] = 0.0;	matrix[3] = 0;
+    matrix[4] = 0.0;	matrix[5] = 2.0/(top-bottom);	matrix[6] = 0.0;	matrix[7] = 0.0;
+    matrix[8] = 0.0;	matrix[9] = 0.0;	matrix[10] = -2.0/(z_far-z_near);	matrix[11] = 0.0;
+    matrix[12] = -(right+left)/(right-left);	matrix[13] = -(top+bottom)/(top-bottom);	matrix[14] = -(z_far+z_near)/(z_far-z_near);	matrix[15] = 1.0;
 }
 
 void Matrix4x4::Rotate(float angle, float x, float y, float z){

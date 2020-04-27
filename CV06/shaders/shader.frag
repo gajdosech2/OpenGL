@@ -26,13 +26,11 @@ float ShadowCalculation(vec4 fragPosLightSpace) {
     // perform perspective divide
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     // Transform to [0,1] range
-    //ToDo transformujte projCoords vzhladom na rozsah texturnych uv suradnice
-    //projCoords = ...
+    projCoords = 0.5 * projCoords + 0.5;
     // Get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
     float closestDepth = texture(depth_tex, projCoords.xy).r; 
     // Get depth of current fragment from light's perspective
-    //ToDo priradte Z-tovu suradnicu fragmentu v kamerovom priestore svetla
-    //float currentDepth = ...
+    float currentDepth = projCoords.z;
     // Check whether current frag pos is in shadow
     float bias = 0.0009;
     float shadow = currentDepth - bias <= closestDepth  ? 1.0 : 0.5;  
@@ -52,8 +50,7 @@ void main() {
         
         vec4 fragPosInLightSpace = light_projection_matrix * light_model_view_matrix * camModelInv * (VertexIn.ecPos/VertexIn.ecPos.w);
         
-		//ToDo vypocitajte farbu fragmentu z difuznej farby a tiena
         // Setting Each Pixel 
-		// fragmentOut =...
+		fragmentOut = ShadowCalculation(fragPosInLightSpace) * NdotL * diffuse_col;
     }
 }
