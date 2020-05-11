@@ -43,7 +43,7 @@ void main()
   gl_Position = gl_in[1].gl_Position;
   VertexOut.normal = -VertexIn[1].normal;
   VertexOut.ecPos = VertexIn[1].ecPos;
-  Emi0tVertex(); 
+  EmitVertex(); 
  
   EndPrimitive();
 }

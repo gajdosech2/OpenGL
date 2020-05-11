@@ -166,7 +166,7 @@ void reshape(int w,int h)
 	glViewport (0, 0, (GLsizei) w, (GLsizei) h); 
 	projection.LoadIdentity();
 	projection.setPerspective(
-						/* field of view in degree */ 40.0, 
+						/* field of view in degree */40.0, 
 						/* aspect ratio */(GLfloat) w/(GLfloat) h, 
 						/* Z near */0.1, 
 						/* Z far */100.0); 
@@ -195,7 +195,7 @@ int main(int argc, char** argv)
 	// Assignment 2: OpenGL Texture Part I
 	glEnable(GL_TEXTURE_2D);
 
-	unsigned char* data = loadBMP("uvmapa.bmp");
+	unsigned char* data = loadBMP("uvmapa_original.bmp");
 
 	glGenTextures(1, &color_tex);
 	glBindTexture(GL_TEXTURE_2D, color_tex);
