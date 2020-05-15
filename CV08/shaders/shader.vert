@@ -20,12 +20,16 @@ void main () {
         VertexOut.normal = normal_matrix * vertex_normal;
 		
         //compute the vertex position  in camera space
-        VertexOut.ecPos =  camera_model_view_matrix  * vec4 (vertex_position, 1.0);
+        VertexOut.ecPos =  camera_model_view_matrix  * vec4(vertex_position, 1.0);
 		
         gl_Position = camera_projection_matrix * VertexOut.ecPos;
 	}
 	
     if (pass_number == 2) {
 		//ToDo nastavte ecPos a gl_Position tak aby stvorec pokryval celu obrazovku
+		
+		VertexOut.ecPos = vec4(vertex_position, 1.0);
+		
+		gl_Position = VertexOut.ecPos;
     }
 }

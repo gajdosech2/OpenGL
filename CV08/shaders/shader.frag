@@ -33,25 +33,27 @@ void main() {
         vec4 ambient_col = vec4(0.1, 0.1, 0.1, 0.0);
     
         //ToDo vypocitajte Blin-Phong farbu a ulozte ju do "color"
-        //vec3 H = ...
-      
-      
-        //...
-      
+        vec3 H = normalize(L + N);
+		
+		float NdotH = max(dot(N, H), 0.0);
+		
+		float specular = pow(NdotH, 150.0);
+		
+		color = ambient_col + diffuse_col * NdotL + vec4(1.0, 1.0, 1.0, 0.0) * specular;
       
         //ToDo do "alpha" zlozky vo vektore "color" ulozte len intenzitu zrhadlovej zlozky
-        //color....
+        color.a = specular;
     }
     
     if (pass_number == 2) {
         vec4 fragPos =  VertexIn.ecPos;
           
-        fragPos /= fragPos.w;
+        //fragPos /= fragPos.w; //netreba, lebo sme nasobili len s MV maticou vo vertex shadery
           
         fragPos = fragPos * 0.5 + 0.5;
         
         //ToDo vyberte farbu z textury
-        //color = ...
+        color = texture(tex, fragPos.xy);
        
         if (enabled) {      
             float kernelSize = 0.015;
@@ -68,15 +70,19 @@ void main() {
                 glow += texture(tex, uv).a;
               
                 //ToDo priratajte dalsie vzorky v smeroch (-1,-1), (-1,1) a (1,-1)
-                //uv = fragPos.xy + vec2(...);
-                //glow += ...
+                uv = fragPos.xy + vec2(-i*delta, i*delta);
+                glow += texture(tex, uv).a;
               
-                //...    
+                uv = fragPos.xy + vec2(i*delta, -i*delta);
+                glow += texture(tex, uv).a;
+              
+				uv = fragPos.xy + vec2(-i*delta, -i*delta);
+                glow += texture(tex, uv).a;		  
             }
           
-          glow /= sample_no;       
+            glow /= sample_no;       
     
-          color += glow * vec4(0.5, 0.5, 0.5, 0.0);
+            color += glow * vec4(0.5, 0.5, 0.5, 0.0);
         }   
     }
     
