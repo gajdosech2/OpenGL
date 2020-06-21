@@ -9,7 +9,7 @@ unsigned char * loadBMP(const char * imagepath) {
   
   if ( fread(header, 1, 54, file)!=54 ){ // If not 54 bytes read : problem
     printf("Not a correct BMP file\n");
-    return false;
+    return 0;
   }
   
   if ( header[0]!='B' || header[1]!='M' ){

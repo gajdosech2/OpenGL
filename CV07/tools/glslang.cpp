@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "glslang.h"
+//#include "glslang.h"
 
 void printShaderInfoLog(GLuint obj)
 {
