@@ -12,7 +12,7 @@ uniform vec3 L2_pos = vec3(0, 0, 100);
 uniform vec4 L2_diffuse_col = vec4(0, 0, 0.8, 1);
 
 uniform sampler2D color_tex;
-uniform bool enabled;
+uniform bool enabled = true;
 uniform int pass_number;
 
 layout(location = 0) out vec4 fragmentOut;
@@ -49,7 +49,7 @@ void main() {
 		if (enabled) {      
             float kernelSize = 0.03;
           
-            int sample_no = 20;
+            int sample_no = 100;
           
             float delta = kernelSize / sample_no;
           

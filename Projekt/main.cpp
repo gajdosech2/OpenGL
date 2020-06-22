@@ -5,7 +5,6 @@
 
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
-#include "linmath.h"
 
 #include <iostream>
 #include <stdlib.h>
@@ -42,21 +41,23 @@ struct ObjectData
 GLFWwindow* window;
 
 GLuint programs[5];
-ObjectData objects[3];
-GLuint vaos[3];
-GLuint color_tex[3];
+ObjectData objects[4];
+GLuint vaos[4];
+GLuint color_tex[4];
+GLuint fb, glow_tex, depth_rb;
 
 Matrix4x4 model;
 Matrix4x4 view;
 
-GLuint fb, glow_tex, depth_rb;
-
 float world_angle = 0;
 float ufo_angle = 0;
-bool glow_enabled = false;
+float missile_angle = 0;
+float missile_position = 22;
+bool missile_active = false;
+bool glow_enabled = true;
 int rotation = 1;
 
-void loadScene(ObjectData& od, const std::string file)
+void loadObject(ObjectData& od, const std::string file)
 {
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(file, aiProcessPreset_TargetRealtime_Fast);
@@ -142,11 +143,10 @@ void setFBO(int texture_width, int texture_height)
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_rb);
 }
 
-void vertexArray()
+void setVertexArray()
 {
-    glGenVertexArrays(3, vaos);
-
-    for (int i = 0; i < 3; i++)
+    glGenVertexArrays(4, vaos);
+    for (int i = 0; i < 4; i++)
     {
         glBindVertexArray(vaos[i]);
         glEnableVertexAttribArray(0);
@@ -167,7 +167,7 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 
-    if (key == GLFW_KEY_A && action == GLFW_PRESS)
+    if (key == GLFW_KEY_G && action == GLFW_PRESS)
     {
         glUseProgram(programs[0]);
         int loc = glGetUniformLocation(programs[0], "enabled");
@@ -180,6 +180,9 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
         rotation = (rotation + 1) % 3;
         std::cout << rotation << std::endl;
     }
+
+    if (key == GLFW_KEY_M && action == GLFW_PRESS && missile_active == false)
+        missile_active = true;
 }
 
 
@@ -206,11 +209,9 @@ GLfloat* g_particule_position_size_data;
 GLuint billboard_vertex_buffer;
 GLuint particles_position_size_buffer;
 
-int ParticlesCount;
+int ParticlesCount = 100;
 
-void setParticles(int count) {
-    ParticlesCount = count;
-
+void setParticles() {
     g_particule_position_size_data = new float[ParticlesCount * 4];
 
     particles = new Particle[ParticlesCount];
@@ -223,7 +224,7 @@ void setParticles(int count) {
         particles[i].dy = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX) - 2) / 10.0f;
         particles[i].dz = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX) - 0.5f) / 20.0f;
         particles[i].size = 0.5f + static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-        particles[i].life = 30 + (rand() % static_cast<int>(30 - 10 + 1));//nahodne cislo od 10 po 30
+        particles[i].life = 30 + (rand() % static_cast<int>(30 - 10 + 1)); //nahodne cislo od 10 po 30
 
         // Fill the GPU buffer
         g_particule_position_size_data[4 * i + 0] = particles[i].x;
@@ -259,7 +260,7 @@ void updateParticles() {
         particles[i].y += particles[i].dy;
         particles[i].z += particles[i].dz;
 
-        particles[i].size *= 1.03f;//postupne zvascujeme casticu
+        particles[i].size *= 1.03f; // postupne zvascujeme casticu
 
 
         if (--particles[i].life < 0) {
@@ -268,7 +269,7 @@ void updateParticles() {
             particles[i].dy = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX) - 2) / 10.0f;
             particles[i].dz = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX) - 0.5f) / 20.0f;
             particles[i].size = 0.5f + static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-            particles[i].life = 50 + (rand() % static_cast<int>(50 - 30 + 1));//nahodne cislo od 30 po 50
+            particles[i].life = 50 + (rand() % static_cast<int>(50 - 30 + 1)); // nahodne cislo od 30 po 50
         }
 
         // Fill the GPU buffer
@@ -336,27 +337,26 @@ void renderParticles()
 }
 
 
-void background()
+void renderBackground()
 {
     glUseProgram(programs[4]);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, color_tex[2]);
+    glBindTexture(GL_TEXTURE_2D, color_tex[3]);
     glEnable(GL_TEXTURE_2D);
 
     glBegin(GL_QUADS);
-    glNormal3f(0.0, 0.0, 1.0);
-    glTexCoord2f(0.0, 0.0);
-    glVertex3f(-1.0, -1.0, 0.0);
+        glTexCoord2f(0, 0);
+        glVertex3f(-1, -1, 0);
 
-    glTexCoord2f(1.0, 0.0);
-    glVertex3f(1.0, -1.0, 0.0);
+        glTexCoord2f(1, 0);
+        glVertex3f(1, -1, 0);
 
-    glTexCoord2f(1.0, 1.0);
-    glVertex3f(1.0, 1.0, 0.0);
+        glTexCoord2f(1, 1);
+        glVertex3f(1, 1, 0);
 
-    glTexCoord2f(0.0, 1.0);
-    glVertex3f(-1.0, 1.0, 0.0);
+        glTexCoord2f(0, 1);
+        glVertex3f(-1, 1, 0);
     glEnd();
 }
 
@@ -369,7 +369,7 @@ float* copyNormal()
     return normal_matrix;
 }
 
-void ufo()
+void renderUFO()
 {
     glUseProgram(programs[2]);
 
@@ -381,17 +381,14 @@ void ufo()
 
     ufo_angle = 0 ? (ufo_angle + 2 >= 360) : ufo_angle + 2;
 
-    float* normal_matrix = copyNormal();
-
     int loc = glGetUniformLocation(programs[2], "model_matrix");
     glUniformMatrix4fv(loc, 1, GL_FALSE, model.matrix);
 
     loc = glGetUniformLocation(programs[2], "normal_matrix");
-    glUniformMatrix3fv(loc, 1, GL_FALSE, normal_matrix);
+    glUniformMatrix3fv(loc, 1, GL_FALSE, copyNormal());
 
-    float L_inten = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 0.5f + 0.5f;
     loc = glGetUniformLocation(programs[2], "L2_intensity");
-    glUniform1f(loc, L_inten);
+    glUniform1f(loc, static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 0.5f + 0.5f);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, color_tex[1]);
@@ -401,7 +398,7 @@ void ufo()
     glDrawElements(GL_TRIANGLES, objects[1].faceCnt * 3, GL_UNSIGNED_INT, NULL);
 }
 
-void fighters(int pass)
+void renderFighters(int pass)
 {
     glUseProgram(programs[0]);
     int pass_location = glGetUniformLocation(programs[0], "pass_number");
@@ -417,13 +414,11 @@ void fighters(int pass)
         model.Rotate(-70, 0, 0, 1);
         model.Scale(0.3f, 0.3f, 0.3f);
 
-        float* normal_matrix = copyNormal();
-
         int loc = glGetUniformLocation(programs[0], "model_matrix");
         glUniformMatrix4fv(loc, 1, GL_FALSE, model.matrix);
 
         loc = glGetUniformLocation(programs[0], "normal_matrix");
-        glUniformMatrix3fv(loc, 1, GL_FALSE, normal_matrix);
+        glUniformMatrix3fv(loc, 1, GL_FALSE, copyNormal());
 
         glBindVertexArray(vaos[2]);
         glDrawElements(GL_TRIANGLES, objects[2].faceCnt * 3, GL_UNSIGNED_INT, NULL);
@@ -433,13 +428,11 @@ void fighters(int pass)
         model.Rotate(-120, 0, 0, 1);
         model.Scale(0.3f, 0.3f, 0.3f);
 
-        normal_matrix = copyNormal();
-
         loc = glGetUniformLocation(programs[0], "model_matrix");
         glUniformMatrix4fv(loc, 1, GL_FALSE, model.matrix);
 
         loc = glGetUniformLocation(programs[0], "normal_matrix");
-        glUniformMatrix3fv(loc, 1, GL_FALSE, normal_matrix);
+        glUniformMatrix3fv(loc, 1, GL_FALSE, copyNormal());
 
         glBindVertexArray(vaos[2]);
         glDrawElements(GL_TRIANGLES, objects[2].faceCnt * 3, GL_UNSIGNED_INT, NULL);
@@ -452,19 +445,19 @@ void fighters(int pass)
         glEnable(GL_TEXTURE_2D);
 
         glBegin(GL_QUADS);
-            glTexCoord2f(0.0f, 0.0f);
-            glVertex3f(-1.0f, -1.0f, 0.0f);
-            glTexCoord2f(1.0f, 0.0f);
-            glVertex3f(1.0f, -1.0f, 0.0f);
-            glTexCoord2f(1.0f, 1.0f);
-            glVertex3f(1.0f, 1.0f, 0.0f);
-            glTexCoord2f(0.0f, 1.0f);
-            glVertex3f(-1.0f, 1.0f, 0.0f);
+            glTexCoord2f(0, 0);
+            glVertex3f(-1, -1, 0);
+            glTexCoord2f(1, 0);
+            glVertex3f(1, -1, 0);
+            glTexCoord2f(1, 1);
+            glVertex3f(1, 1, 0);
+            glTexCoord2f(0, 1);
+            glVertex3f(-1, 1, 0);
         glEnd();
     }
 }
 
-void spacecraft()
+void renderSpacecraft()
 {
     glUseProgram(programs[1]);
 
@@ -472,13 +465,11 @@ void spacecraft()
     model.Rotate(10, 0, 1, 0);
     model.Translate(0, 11, 0);
 
-    float* normal_matrix = copyNormal();
-
     int loc = glGetUniformLocation(programs[1], "model_matrix");
     glUniformMatrix4fv(loc, 1, GL_FALSE, model.matrix);
 
     loc = glGetUniformLocation(programs[1], "normal_matrix");
-    glUniformMatrix3fv(loc, 1, GL_FALSE, normal_matrix);
+    glUniformMatrix3fv(loc, 1, GL_FALSE, copyNormal());
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, color_tex[0]);
@@ -486,6 +477,42 @@ void spacecraft()
 
     glBindVertexArray(vaos[0]);
     glDrawElements(GL_TRIANGLES, objects[0].faceCnt * 3, GL_UNSIGNED_INT, NULL);
+}
+
+void renderMissile()
+{
+    if (missile_active == false)
+        return;
+
+    glUseProgram(programs[1]);
+
+    model.LoadIdentity();
+    model.Scale(0.5f, 0.5f, 0.5f);
+    model.Translate(0, missile_position, -3);
+    model.Rotate(-missile_angle, 0, 1, 0);
+
+    int loc = glGetUniformLocation(programs[1], "model_matrix");
+    glUniformMatrix4fv(loc, 1, GL_FALSE, model.matrix);
+
+    loc = glGetUniformLocation(programs[1], "normal_matrix");
+    glUniformMatrix3fv(loc, 1, GL_FALSE, copyNormal());
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, color_tex[2]);
+    glEnable(GL_TEXTURE_2D);
+
+    glBindVertexArray(vaos[3]);
+    glDrawElements(GL_TRIANGLES, objects[3].faceCnt * 3, GL_UNSIGNED_INT, NULL);
+
+    missile_angle = 0 ? (missile_angle + 3 >= 360) : missile_angle + 3;
+    missile_position -= 0.3f;
+
+    if (missile_position < -100)
+    {
+        missile_active = false;
+        missile_position = 22;
+        std::cout << "Missile Ready!" << std::endl;
+    }
 }
 
 void renderScene()
@@ -505,7 +532,7 @@ void renderScene()
         glUniformMatrix4fv(loc, 1, GL_FALSE, view.matrix);
     }
 
-    fighters(1);
+    renderFighters(1);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -514,9 +541,8 @@ void renderScene()
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-    background();
-
-    fighters(2);
+    renderBackground();
+    renderFighters(2);
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     renderParticles();
@@ -525,19 +551,19 @@ void renderScene()
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
 
-    spacecraft();
-    ufo();
+    renderSpacecraft();
+    renderMissile();
+    renderUFO();
     
     glfwSwapBuffers(window);
     glfwPollEvents();
 }
 
-void textures()
+void setTextures()
 {
     glGenTextures(3, color_tex);
-
-    const char* files[3] = {"models/craft_color.bmp", "models/UFO_color.bmp", "models/bg.bmp"};
-    for (int i = 0; i < 3; i++)
+    const char* files[4] = {"models/craft_color.bmp", "models/UFO_color.bmp", "models/missile_color.bmp", "models/bg.bmp"};
+    for (int i = 0; i < 4; i++)
     {
         unsigned char* data = loadBMP(files[i]);
         glBindTexture(GL_TEXTURE_2D, color_tex[i]);
@@ -547,7 +573,7 @@ void textures()
     }
 }
 
-void shaders()
+void setShaders()
 {
     programs[0] = createShaderProgram((char*)"./shaders/fighter.vert", (char*)"./shaders/fighter.frag");
     programs[1] = createShaderProgram((char*)"./shaders/spacecraft.vert", (char*)"./shaders/spacecraft.frag");
@@ -589,9 +615,7 @@ void initialize()
     glfwMakeContextCurrent(window);
 
     if (GLEW_OK != glewInit())
-    {
         exit(EXIT_FAILURE);
-    }
 
     glfwSwapInterval(1);
 }
@@ -599,26 +623,21 @@ void initialize()
 int main() {
     initialize();
 
-    loadScene(objects[0], "models/spacecraft.dae");
-    loadScene(objects[1], "models/ufo.dae");
-    loadScene(objects[2], "models/fighter.ply");
+    loadObject(objects[0], "models/spacecraft.dae");
+    loadObject(objects[1], "models/ufo.dae");
+    loadObject(objects[2], "models/fighter.ply");
+    loadObject(objects[3], "models/missile.ply");
 
-    shaders();
-
-    textures();
-
-    vertexArray();
+    setShaders();
+    setTextures();
+    setVertexArray();
     setFBO(1000, 1000);
-
-    setParticles(100);
+    setParticles();
 
     while (!glfwWindowShouldClose(window))
-    {
         renderScene();
-    }
 
     glfwDestroyWindow(window);
-
     glfwTerminate();
     exit(EXIT_SUCCESS);
 }
