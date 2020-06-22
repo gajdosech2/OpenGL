@@ -10,7 +10,7 @@ uniform vec3 L1_pos = vec3(0, -100, -100);
 uniform vec4 L1_diffuse_col = vec4(1, 1, 1, 1);
 
 uniform vec3 L2_pos = vec3(0, 100, 100);
-uniform vec4 L2_diffuse_col = vec4(0.6, 0, 0, 1);
+uniform vec4 L2_diffuse_col = vec4(0.7, 0, 0.2, 1);
 
 uniform sampler2D color_tex;
 
