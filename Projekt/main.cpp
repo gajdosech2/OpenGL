@@ -57,6 +57,8 @@ bool missile_active = false;
 bool glow_enabled = true;
 int rotation = 1;
 
+float px = 0, py = 0, pz = 0;
+
 void loadObject(ObjectData& od, const std::string file)
 {
     Assimp::Importer importer;
@@ -175,7 +177,7 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
         glUniform1i(loc, glow_enabled);
     }
 
-    if (key == GLFW_KEY_R && action == GLFW_PRESS)
+    if (key == GLFW_KEY_O && action == GLFW_PRESS)
     {
         rotation = (rotation + 1) % 3;
         std::cout << rotation << std::endl;
@@ -183,6 +185,18 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 
     if (key == GLFW_KEY_M && action == GLFW_PRESS && missile_active == false)
         missile_active = true;
+
+    if (key == GLFW_KEY_A) px += 0.1f;
+
+    if (key == GLFW_KEY_D) px -= 0.1f;
+
+    if (key == GLFW_KEY_F) py += 0.1f;
+
+    if (key == GLFW_KEY_R) py -= 0.1f;
+
+    if (key == GLFW_KEY_W) pz += 0.1f;
+
+    if (key == GLFW_KEY_S) pz -= 0.1f;
 }
 
 
@@ -520,7 +534,7 @@ void renderScene()
     float* normal_matrix = new float[9];
 
     view.LoadIdentity();
-    view.Translate(0, 0, -35);
+    view.Translate(px, py, -35 + pz);
     view.Rotate(90, 1, 0, 0);
     view.Rotate(world_angle, 0, 0, 1);
     world_angle = 0 ? ( world_angle + 0.2f * rotation * rotation >= 360) : world_angle + 0.2f * rotation * rotation;
