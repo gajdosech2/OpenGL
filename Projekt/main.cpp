@@ -422,6 +422,7 @@ void renderFighters(int pass)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, fb);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
 
         model.LoadIdentity();
         model.Translate(10, 10, -4);
